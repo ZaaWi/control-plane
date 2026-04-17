@@ -43,7 +43,7 @@ func TestFormatSnapshot(t *testing.T) {
 	output := formatSnapshot(snapshot)
 
 	expected := []string{
-		"control-plane snapshot",
+		"request-pipeline-sim snapshot",
 		"scenario: retry-storm",
 		"tick: 7",
 		"queue: 9/24 backpressure=true",

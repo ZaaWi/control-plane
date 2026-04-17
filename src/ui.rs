@@ -37,7 +37,7 @@ fn render_header(frame: &mut Frame<'_>, area: Rect, app: &App) {
     let simulation = &app.simulation;
     let line = Line::from(vec![
         Span::styled(
-            "control-plane",
+            "request-pipeline-sim",
             Style::default().add_modifier(Modifier::BOLD),
         ),
         Span::raw("  tick "),

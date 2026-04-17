@@ -1,6 +1,8 @@
-# control-plane
+# request-pipeline-sim
 
-This project explores how a request pipeline behaves under load and failure. It uses a deterministic simulation so behavior is repeatable without running real infrastructure. Rust owns the data plane and all state mutation, while Go remains a read-only control-plane probe.
+Deterministic simulation of a small **request pipeline**  under load and failure, with a terminal UI and an optional read-only RPC boundary. Rust owns all simulation state and mutation; a Go program can **observe** snapshots over TCP but does not drive the sim.
+
+This project explores how such a pipeline behaves under load and failure without real infrastructure. The Go side is intentionally a **read-only observer probe**, not an orchestrator.
 
 ## Demo
 
@@ -9,7 +11,7 @@ This project explores how a request pipeline behaves under load and failure. It 
 </p>
 
 Terminal simulation of a small request-processing data plane with a separate
-read-only control-plane probe.
+read-only observer probe (Go).
 
 The Rust process owns the simulation, terminal UI, and all state mutation. It
 runs a deterministic tick loop for one request generator, one bounded shared
@@ -38,7 +40,7 @@ Rust is the data plane and execution owner:
 - applies retries, backpressure, overload, recovery, and restart behavior
 - optionally publishes a snapshot copy for RPC readers
 
-Go is a control-plane probe:
+Go is an **observer probe** (read-only):
 
 - dials the Rust TCP endpoint
 - sends `Ping` or `GetSimulationSnapshot`
@@ -127,7 +129,7 @@ Controls:
 - `r` restarts the focused service only when the focused service is failed.
 - `q`, `Esc`, or `Ctrl-C` exits.
 
-## RPC Probe
+## RPC probe
 
 Start Rust with the read-only RPC endpoint enabled:
 
@@ -138,14 +140,14 @@ cargo run -- --scenario retry-storm --rpc-addr 127.0.0.1:4707
 In another terminal, fetch one snapshot with the Go probe:
 
 ```sh
-cd go/control-plane
+cd go/probe
 go run . -addr 127.0.0.1:4707
 ```
 
 Check reachability without fetching a snapshot:
 
 ```sh
-cd go/control-plane
+cd go/probe
 go run . -addr 127.0.0.1:4707 -ping
 ```
 
@@ -170,7 +172,7 @@ Snapshot responses include:
 - Service A and Service B state and counters
 - status signal identifiers
 
-## Demo Flows
+## Demo flows
 
 Steady-state baseline:
 
@@ -180,7 +182,7 @@ cargo run -- --scenario steady-state
 
 Watch the queue, services, and recent averages settle under balanced load.
 
-Retry-storm with control-plane inspection:
+Retry-storm with the observer probe:
 
 ```sh
 cargo run -- --scenario retry-storm --rpc-addr 127.0.0.1:4707
@@ -189,13 +191,13 @@ cargo run -- --scenario retry-storm --rpc-addr 127.0.0.1:4707
 Then, from another terminal:
 
 ```sh
-cd go/control-plane
+cd go/probe
 go run . -addr 127.0.0.1:4707
 ```
 
 Run the Go command repeatedly to sample the current Rust-owned snapshot.
 
-## Repo Structure
+## Repo structure
 
 - `src/main.rs` - CLI parsing, TUI lifecycle, tick loop, snapshot publication
 - `src/simulation.rs` - simulation state, dispatch, retries, backpressure,
@@ -203,7 +205,7 @@ Run the Go command repeatedly to sample the current Rust-owned snapshot.
 - `src/scenario.rs` - deterministic scenario presets
 - `src/ui.rs` - terminal rendering and focused controls
 - `src/rpc.rs` - read-only TCP JSON snapshot server
-- `go/control-plane/` - Go probe for `Ping` and `GetSimulationSnapshot`
+- `go/probe/` - Go probe for `Ping` and `GetSimulationSnapshot`
 
 ## Verify
 
@@ -217,13 +219,13 @@ cargo run -- --list-scenarios
 For the Go probe:
 
 ```sh
-cd go/control-plane
+cd go/probe
 go test ./...
 ```
 
-## Intentionally Out Of Scope
+## Intentionally out of scope
 
-- Control-plane write actions or orchestration policies
+- Write actions or orchestration policies from the Go side
 - RPC restart, routing, scaling, or scheduling methods
 - Logs, traces, metrics integrations, or external observability systems
 - External configuration systems or scenario scripting
@@ -232,9 +234,9 @@ go test ./...
   firewalls
 - Replacing the JSON/TCP RPC boundary with another transport
 
-## Future Work
+## Future work
 
 - Add a multi-node simulation mode with routing and basic load balancing across nodes.
 - Extend observability with latency views and error-distribution summaries in snapshots.
-- Evolve the Go probe into a control plane capable of controlled write actions (restart, routing changes) while preserving separation from the simulation loop.
+- Evolve the Go probe into a component that can issue controlled write actions (restart, routing changes) while preserving separation from the simulation loop.
 - Expand scenario presets to cover additional traffic shapes and failure patterns.

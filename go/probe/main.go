@@ -176,7 +176,7 @@ func formatSnapshot(snapshot *snapshot) string {
 	}
 
 	return fmt.Sprintf(
-		"control-plane snapshot\n"+
+		"request-pipeline-sim snapshot\n"+
 			"scenario: %s\n"+
 			"tick: %d\n"+
 			"queue: %d/%d backpressure=%t\n"+

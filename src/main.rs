@@ -94,9 +94,9 @@ where
             }
             "--help" | "-h" => {
                 println!(
-                    "Usage: control-plane [--scenario NAME] [--max-ticks N] [--rpc-addr ADDR]"
+                    "Usage: request-pipeline-sim [--scenario NAME] [--max-ticks N] [--rpc-addr ADDR]"
                 );
-                println!("       control-plane --list-scenarios");
+                println!("       request-pipeline-sim --list-scenarios");
                 println!();
                 println!("Options:");
                 println!("  --scenario NAME      run a built-in scenario (default: steady-state)");
